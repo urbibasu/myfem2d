@@ -1,0 +1,33 @@
+# Domain size: 500 km x 100 km
+#
+#        500 km
+#  0-----------------3
+#  |                 |
+#  |                 | 100 km
+#  |                 |
+#  1-----------------2
+#
+#
+#### node coordinates ####
+# npoints ndims 0 0
+  4      2     0 0
+# i    xi       yi
+  0    0.0      0.0
+  1    0.0   -100.0e3 
+  2  500.0e3 -100.0e3 
+  3  500.0e3    0.0 
+#### segments ####
+# nsegments 1
+  4        1
+# j  pj0  pj1  bdry_flag
+  0   0    1    1  #  1: left (x0)
+  1   1    2   16  # 16: bottom (z0)
+  2   2    3    2  #  2: right (x1)
+  3   3    0   32  # 32: top (z1)
+#### holes, must be 0 ####
+0
+#### regions ####
+# nregions
+  1
+# k  xk    zk   mattype  size
+  0 250e3 -50e3 0        5e7  # max. element size (in m^2)
