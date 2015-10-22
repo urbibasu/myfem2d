@@ -396,9 +396,12 @@ void new_mesh_from_polyfile(const Param& param, Variables& var)
     double max_elem_size = std_elem_size;
     if ( has_max_size ) max_elem_size = 0; // special value, see set_volume_str() above.
 
+    std::cerr << " About to start triangulation\n";
     points_to_mesh(param, var, npoints, points,
                    n_init_segments, init_segments, init_segflags, nregions, regattr,
                    max_elem_size, NODES_PER_FACET);
+
+    std::cerr << " Finished triangulation\n";
 
     delete [] points;
     delete [] init_segments;

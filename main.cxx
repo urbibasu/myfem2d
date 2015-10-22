@@ -37,15 +37,22 @@ void init(const Param& param, Variables& var)
     create_support(var);
 
     allocate_variables(param, var);
+
+    compute_volume(*var.coord, *var.connectivity, *var.volume);
+
+    // initialize shape functions here
+    // compute_shape_fn(...)
+
+    // apply_bcs(param, var, *var.vel);
+
+    // temperature should be init'd before stress and strain
+    initial_temperature(param, var, *var.temperature);
 }
 
 
 int main(int argc, const char* argv[])
 {
     double start_time = 0;
-#ifdef USE_OMP
-    start_time = omp_get_wtime();
-#endif
 
     //
     // read command line
@@ -93,9 +100,6 @@ int main(int argc, const char* argv[])
             ( (var.time - starting_time) > next_regular_frame * param.sim.output_time_interval_in_yr * YEAR2SEC )
            )
         {
-            if (next_regular_frame % param.sim.checkpoint_frame_interval == 0)
-                output.write_checkpoint(param, var);
-
             output.write(var);
 
             next_regular_frame ++;

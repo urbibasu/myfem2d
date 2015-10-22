@@ -105,6 +105,7 @@ double compute_dt(const Param& param, const Variables& var)
             double maxl = std::sqrt(std::max(std::max(dist2(a, b),
                                                       dist2(b, c)),
                                              dist2(a, c)));
+            std::cerr << e <<" "<< maxl <<" "<< volume[e] << std::endl;
             minh = 2 * volume[e] / maxl;
         }
 

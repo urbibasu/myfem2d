@@ -12,7 +12,7 @@
 ## openmp = 1: enable OpenMP
 
 ndims = 2
-opt = 2
+opt = 0
 
 ## Select C++ compiler
 CXX = g++-mp-4.7

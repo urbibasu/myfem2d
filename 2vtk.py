@@ -2,15 +2,12 @@
 # encoding: utf-8
 '''Convert the binary output of DynEarthSol3D to VTK files.
 
-usage: 2vtk.py [-a -c -m -p -t -h] modelname [start [end [delta]]]]
+usage: 2vtk.py [-a -c -h] modelname [start [end [delta]]]]
 
 options:
     -a          save data in ASCII format (default: binary)
     -c          save files in current directory (default: same directory as
                 the data files)
-    -m          save marker data
-    -p          save P-axis and T-axis
-    -t          save all tensor components (default: only 1st/2nd invariants)
     -h,--help   show this help
 '''
 
@@ -18,7 +15,6 @@ from __future__ import print_function, unicode_literals
 import sys, os
 import base64, zlib
 import numpy as np
-from numpy.linalg  import eigh
 from Dynearthsol import Dynearthsol
 
 # Save in ASCII or encoded binary.
@@ -72,14 +68,6 @@ def main(modelname, start, end, delta):
             #
             fvtu.write(b'  <PointData>\n')
 
-            # averaged velocity is more stable and is preferred
-            try:
-                convert_field(des, frame, 'velocity averaged', fvtu)
-            except KeyError:
-                convert_field(des, frame, 'velocity', fvtu)
-
-            convert_field(des, frame, 'force', fvtu)
-
             convert_field(des, frame, 'temperature', fvtu)
             #convert_field(des, frame, 'z0', fvtu)
             #convert_field(des, frame, 'bcflag', fvtu)
@@ -91,63 +79,6 @@ def main(modelname, start, end, delta):
             vtk_dataarray(fvtu, np.arange(nnode, dtype=np.int32), 'node number')
 
             fvtu.write(b'  </PointData>\n')
-            #
-            # element-based field
-            #
-            fvtu.write(b'  <CellData>\n')
-
-            #convert_field(des, frame, 'volume', fvtu)
-            #convert_field(des, frame, 'edvoldt', fvtu)
-
-            convert_field(des, frame, 'mesh quality', fvtu)
-            convert_field(des, frame, 'plastic strain', fvtu)
-            convert_field(des, frame, 'plastic strain-rate', fvtu)
-
-            strain_rate = des.read_field(frame, 'strain-rate')
-            srII = second_invariant(strain_rate)
-            vtk_dataarray(fvtu, np.log10(srII+1e-45), 'strain-rate II log10')
-            if output_tensor_components:
-                for d in range(des.nstr):
-                    vtk_dataarray(fvtu, strain_rate[:,d], 'strain-rate ' + des.component_names[d])
-
-            strain = des.read_field(frame, 'strain')
-            sI = first_invariant(strain)
-            sII = second_invariant(strain)
-            vtk_dataarray(fvtu, sI, 'strain I')
-            vtk_dataarray(fvtu, sII, 'strain II')
-            if output_tensor_components:
-                for d in range(des.nstr):
-                    vtk_dataarray(fvtu, strain[:,d], 'strain ' + des.component_names[d])
-
-            # averaged stress is more stable and is preferred
-            try:
-                stress = des.read_field(frame, 'stress averaged')
-            except KeyError:
-                stress = des.read_field(frame, 'stress')
-            tI = first_invariant(stress)
-            tII = second_invariant(stress)
-            vtk_dataarray(fvtu, tI, 'stress I')
-            vtk_dataarray(fvtu, tII, 'stress II')
-            if output_tensor_components:
-                for d in range(des.ndims):
-                    vtk_dataarray(fvtu, stress[:,d] - tI, 'stress ' + des.component_names[d] + ' dev.')
-                for d in range(des.ndims, des.nstr):
-                    vtk_dataarray(fvtu, stress[:,d], 'stress ' + des.component_names[d])
-            if output_pt_axis:
-                p_axis, t_axis = compute_pt_axis(stress)
-                vtk_dataarray(fvtu, p_axis, 'P-axis', 3)
-                vtk_dataarray(fvtu, t_axis, 'T-axis', 3)
-
-            convert_field(des, frame, 'density', fvtu)
-            convert_field(des, frame, 'material', fvtu)
-            convert_field(des, frame, 'viscosity', fvtu)
-            effvisc = tII / (srII + 1e-45)
-            vtk_dataarray(fvtu, effvisc, 'effective viscosity')
-
-            # element number for debugging
-            vtk_dataarray(fvtu, np.arange(nelem, dtype=np.int32), 'elem number')
-
-            fvtu.write(b'  </CellData>\n')
 
             #
             # node coordinate
@@ -179,19 +110,6 @@ def main(modelname, start, end, delta):
             fvtu.close()
             os.remove(filename)
             raise
-
-        #
-        # Converting marker
-        #
-        if output_markers:
-            # ordinary markerset
-            filename = '{0}.{1}.vtp'.format(output_prefix, suffix)
-            output_vtp_file(des, frame, filename, 'markerset', time_in_yr, step)
-
-            # hydrous markerset
-            if 'hydrous-markerset size' in des.field_pos:
-                filename = '{0}.hyd-ms.{1}.vtp'.format(output_prefix, suffix)
-                output_vtp_file(des, frame, filename, 'hydrous-markerset')
 
     print()
     return
