@@ -1,6 +1,6 @@
 # Background
 
-This code is a stripped-down version of DynEarthSol3D (https://bitbucket.org/tan2/dynearthsol3d)
+This code is a bare-bones version of DynEarthSol3D (https://bitbucket.org/tan2/dynearthsol3d)
 to be used in the term project for CERI 7315/8315 Computational Methods for Geodynamics.
 
 
