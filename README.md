@@ -47,7 +47,7 @@ Build procedure:
 
 This software, as well as possible updates, is available from the
 following URL:
-   http://bitbucket.org/echoi/myfem2d
+   http://github.com/echoi/myfem2d/
 
 
 # License
