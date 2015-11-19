@@ -12,13 +12,14 @@
 ## openmp = 1: enable OpenMP
 
 ndims = 2
-opt = 0
+opt =  0
+openmp = 1
 
 ## Select C++ compiler
-CXX = g++-mp-4.7
+CXX = g++-mp-4.9
 
 ## Boost location and library name
-BOOST_ROOT_DIR = /Users/eunseo/opt/boost_1_51_0
+BOOST_ROOT_DIR = /Users/poppy/opt/boost_1_59_0
 
 ########################################################################
 ## Select compiler and linker flags
@@ -43,7 +44,12 @@ ifneq (, $(findstring g++, $(CXX))) # if using any version of g++
 		CXXFLAGS += -march=native -O3 -ffast-math -funroll-loops
 	else # debugging flags
 		CXXFLAGS += -O0 -Wall -Wno-unused-variable -Wno-unused-function -Wno-unknown-pragmas -fbounds-check -ftrapv
+
 	endif
+	ifeq ($(openmp), 1)
+                CXXFLAGS += -fopenmp -DUSE_OMP
+                LDFLAGS += -fopenmp
+        endif
 
 else ifneq (, $(findstring icpc, $(CXX))) # if using intel compiler, tested with v14
         CXXFLAGS = -g -std=c++0x
@@ -83,7 +89,8 @@ SRCS =	\
 	matprops.cxx \
 	mesh.cxx \
 	output.cxx \
-	rheology.cxx
+	rheology.cxx \
+        solver.cxx
 
 INCS =	\
 	array2d.hpp \
@@ -93,7 +100,8 @@ INCS =	\
 	matprops.hpp \
 	utils.hpp \
 	mesh.hpp \
-	output.hpp
+	output.hpp \
+       solver.hpp 
 
 OBJS = $(SRCS:.cxx=.$(ndims)d.o)
 
