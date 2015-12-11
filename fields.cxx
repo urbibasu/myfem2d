@@ -34,6 +34,8 @@ void update_temperature(const Param &param, const Variables &var,
     /* Declaring all the global variables*/
     double **new_M;
     double **L;
+    double *new_B;
+    new_B = (double*) malloc(n*sizeof(double));
     new_M = (double**) malloc(n*sizeof(double*));
     for(i=0; i<n; i++)
         new_M[i] = (double*) malloc(n*sizeof(double));
@@ -42,8 +44,6 @@ void update_temperature(const Param &param, const Variables &var,
         L[i] = (double*) malloc(n*sizeof(double));
     double *BB;
     BB = (double*) malloc(n*sizeof(double));
-    double *new_B;
-    new_B = (double*) malloc(n*sizeof(double));
     double *node_temp;
     node_temp = (double*) malloc(n*sizeof(double));
     for (i=0;i<n;i++)
@@ -52,8 +52,8 @@ void update_temperature(const Param &param, const Variables &var,
     }
     
     /* calling the assembly function to create the K matrix and B vector*/
-    assembly(n,nelem);
-    Loadvector(n,L,BB,node_temp);
+    assembly(n,nelem,L,BB,new_M);
+    Loadvector(n,L,BB,node_temp,new_B);
     
     double eps = 1.0e-5;
     int maxit = 10000; //2*n*n;

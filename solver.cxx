@@ -7,7 +7,7 @@ using namespace std;
 #include "solver.hpp"
 
 
-void assembly (int n, int nelem)
+void assembly (int n, int nelem, double **L, double *BB, double **new_M)
 {
     int e,i,j;
     double **A; // STIFFNESS MATRIX
@@ -53,6 +53,7 @@ void assembly (int n, int nelem)
     // LOOP OVER ALL ELEMENTS to create K,M, B //
     for (e=0;e<nelem;e++)
     {
+        const int *conn = (*var.connectivity)[e];
         /*   SHAPE FUNCTIONS:   phi1 = 1-x-y;   phi2=x;   phi3=y; */
         ///element stiffness matirx= A *2area;
         //printf("%2.0f", k[e]);
@@ -70,17 +71,18 @@ void assembly (int n, int nelem)
         for (i=0;i<3;i++)
         {
             // looping over all nodes, i is the no of node
-            if (loc_node[i][0] == 0.0 || 500.e03) || (loc_node[i][1] == 0.0 || -100.e03)
+            if ((loc_node[i][0] == 0.0 || 500.e03) || (loc_node[i][1] == 0.0 || -100.e03));
                 for (j=0;j<3;j++)
                 {
                     if (j==i)
-                        k[i][j]==1;
+                        k[i][j]=1;
                     else
-                        k[i][j]==0;
+                        k[i][j]=0;
                 }
         }
         
-        m[e]= Z * 1/12 * (*var.volume)[e]; //all element mass matrices
+        //m[e]= Z * 0.8 * (*var.volume)[e]; //all element mass matrices
+        m[e]= Z * (*var.volume)[e]; //all element mass matrices
         k[e]= A * (*var.volume)[e];        //all element stiffness matrices
         
         
@@ -92,23 +94,22 @@ void assembly (int n, int nelem)
         for (i=0;i<3;i++)
         {
             // looping over all nodes, i is the no of node
-            if (loc_node[i][0] == 10.0 || 11.0) || (loc_node[i][1] == -2.0 || -4.0)
-                f[i]==1;
+            if ((loc_node[i][0] == 10.0 || 11.0) || (loc_node[i][1] == -2.0 || -4.0))
+                force[i]=1;
             else
-                f[i]==0;
+                force[i]=0;
         }
         /* creating the load vector for each element*/
-        double load_Vector[3][1] = {};
+        double *load_Vector;
         load_Vector = (double*) malloc(3*sizeof(double));
         for (i=0;i<3;i++)
-            load_Vector[i]= f[i] *1/3 * (*var.volume)[e];
+            load_Vector[i]= force[i] * 0.33 * (*var.volume)[e];
         
         
         // GLOBAL mass and stiffness matrix, load vector
-        const int *conn = (*var.connectivity)[e];
-        K(conn(e,i),conn(e,j)) +=k;
-        M(conn(e,i),conn(e,j)) +=m;
-        B(conn(e,i)) +=load_Vector;
+        K[*var.connectivity(e,i),*var.connectivity(e,j)] +=k;
+        M[*var.connectivity(e,i),*var.connectivity(e,j)] +=m;
+        B[*var.connectivity(e,i)] +=load_Vector;
     }
     
     
@@ -125,7 +126,10 @@ void assembly (int n, int nelem)
     
     //double BB[n][1]={};  //TIMESTEP*B
     int timestep =0.0001;
-    BB= timestep * B;
+    for (i=0;i<n;i++)
+    {
+       BB[i]= timestep * B[i];
+    }
     double LL[n][n]={}; // new_M -timestep
     LL= new_M -timestep;
     //double L[n][n]={};    // (LL-K)
@@ -143,7 +147,7 @@ void assembly (int n, int nelem)
 //------------------------ creating vector new_B (matrix B of the linear system)------//
 
 
-void Loadvector( int n,double **L, double *BB, double *node_temp )
+void Loadvector( int n,double **L, double *BB, double *node_temp, double *new_B )
 {
     int i,j;
     //double new_B[n][1]={};
@@ -157,6 +161,7 @@ void Loadvector( int n,double **L, double *BB, double *node_temp )
         }
        // new_B= new_B + BB;
     }
+}
 
 
 /*void test_system
@@ -294,7 +299,7 @@ void run_gauss_seidel_method
         }
         residual = sqrt(res_sum);
         node_temp[i]=x[i];
-        Loadvector(n, L,BB, node_temp);
+        Loadvector(n, L, BB, node_temp, new_B);
         //printf("Residual at iteration %4d : %.3e\n",k,residual);
         if(residual <= eps) break;
         //std::cout <<sum << std::endl;
@@ -317,15 +322,15 @@ void cg(int n, double **A, double *b, double eps, int maxit,double *x)
     double r[n],p0[n];
     double A_p0[n],beta,rk1;
     // zero the dot array
-    for(unsigned int i=0; i < n; i++)
+    for(int i=0; i < n; i++)
     {
         dot[i]=0.0;
     }
     
     // compute A * x0
-    for(unsigned int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++)
     {
-        for(unsigned int j = 0; j < n; j++)
+        for(int j = 0; j < n; j++)
         {
             dot[i] += A[i][j] * x[j];
         }
@@ -333,7 +338,7 @@ void cg(int n, double **A, double *b, double eps, int maxit,double *x)
         //		std::cout << "\n";
     }
     // compute residual
-    for(unsigned int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++)
     {
         r[i] = b[i] - dot[i];
         //		std::cerr << r[i]<<" ";
@@ -344,7 +349,7 @@ void cg(int n, double **A, double *b, double eps, int maxit,double *x)
         p0[i]=r[i];
         //    	cout<<p0[i]<<" ";
     }
-    for(unsigned int step=0; step<1000000; step++)
+    for(int step=0; step<1000000; step++)
     {
         
         //		double r_tran[1][2]={0.0,0.0};
@@ -354,7 +359,7 @@ void cg(int n, double **A, double *b, double eps, int maxit,double *x)
         double lower1=0.0;
         double lower2=0.0;
         double sum=0.0;
-        for(unsigned int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
             upper1 += p0[i] * r[i];
             //			cout<<upper1<<"\n";
@@ -362,9 +367,9 @@ void cg(int n, double **A, double *b, double eps, int maxit,double *x)
         //
         
         // r^T*A*r
-        for(unsigned int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
-            for(unsigned int j = 0; j < n; j++)
+            for(int j = 0; j < n; j++)
             {
                 lower1 +=  p0[i] * A[i][j] * p0[j];
             }
@@ -383,20 +388,20 @@ void cg(int n, double **A, double *b, double eps, int maxit,double *x)
         }
         
         // update the solution
-        for(unsigned int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
             x[i] += rk1 * p0[i];
             // cout<<x[i]<<" ";
         }
         //        cout<<"\n";
-        for(unsigned int i=0; i < n; i++)
+        for(int i=0; i < n; i++)
         {
             A_p0[i]=0.0;
         }
         //update the residual
-        for(unsigned int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
-            for(unsigned int j = 0; j < n; j++)
+            for(int j = 0; j < n; j++)
             {
                 A_p0[i] += A[i][j] * p0[j];
             }
@@ -407,14 +412,14 @@ void cg(int n, double **A, double *b, double eps, int maxit,double *x)
             //        	cout<<r[i]<<" ";
         }
         
-        for(unsigned int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
             upper2 += p0[i] * r[i];
         }
         //		cout<<upper2<<"\n";
-        for(unsigned int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
-            for(unsigned int j = 0; j < n; j++)
+            for(int j = 0; j < n; j++)
             {
                 lower2 +=  p0[i] * A[i][j] * p0[j];
             }
@@ -438,7 +443,7 @@ void cg(int n, double **A, double *b, double eps, int maxit,double *x)
         if( sqrt(sum) <= eps)
         {
             std::cout <<"n step to converge(CG method):  " << step <<"\n" ;
-            for(unsigned int i=0; i<n; i++)
+            for(int i=0; i<n; i++)
                 std::cerr << x[i] <<"\n";
             //std::cout <<"the eps is : " << eps << "\n" ;
             break;

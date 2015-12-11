@@ -2,8 +2,8 @@
 #define solver_hpp
 
 void test_system( int n, double **A, double *b );
-void assembly(int n, int nelem);
-void Loadvector(int n, double **L, double **BB, double *node_temp);
+void assembly(int n, int nelem,double **L, double *BB, double **new_M);
+void Loadvector(int n, double **L, double *BB, double *node_temp,double *new_B);
 void jacobi(int n, double **A, double *b, int maxit, int eps, double *x);
 void cp_vector(int, double* , const double* );
 bool epsilon_comp(int, const double* );
