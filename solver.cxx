@@ -125,11 +125,12 @@ void assembly (int n, int nelem, double **L, double *BB, double **new_M)
     }
     
     //double BB[n][1]={};  //TIMESTEP*B
-    int timestep =0.0001;
-    for (i=0;i<n;i++)
+    double timestep =0.0001;
+    /*for (i=0;i<n;i++)
     {
        BB[i]= timestep * B[i];
-    }
+    }*/
+    BB= timestep * B;
     double **LL;
     LL = (double**) malloc(n*sizeof(double*));
     for(i=0; i<n; i++)
