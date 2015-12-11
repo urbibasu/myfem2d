@@ -130,7 +130,10 @@ void assembly (int n, int nelem, double **L, double *BB, double **new_M)
     {
        BB[i]= timestep * B[i];
     }
-    double LL[n][n]={}; // new_M -timestep
+    double **LL;
+    LL = (double**) malloc(n*sizeof(double*));
+    for(i=0; i<n; i++)
+        LL[i] = (double*) malloc(n*sizeof(double));   // new_M -timestep
     LL= new_M -timestep;
     //double L[n][n]={};    // (LL-K)
     for (i=0;i<n;i++)
@@ -258,7 +261,7 @@ double* sub_vector(int size, const double* x, const double* y)
     return d;
 }
 //--------------------------------------------
-bool epsilon_comp(int size, const double* x)
+bool epsilon_comp(int size, const double *x)
 {
     const double epsilon = 0.00001;
     int i, count;
@@ -275,9 +278,7 @@ bool epsilon_comp(int size, const double* x)
 
 //------------gauss
 void run_gauss_seidel_method
-( int n, double **A, double *b,
- double eps, int maxit,
- int *numit, double *x )
+( int n, double **A, double *new_B, double eps, int maxit, int *numit, double *x, double **L,double *BB)
 {
     //printf("gauss\n");
     double *dx = (double*) malloc(n*sizeof(double));
@@ -288,9 +289,10 @@ void run_gauss_seidel_method
     {
         double residual = 0.0;
         double res_sum = 0.0;
+        Loadvector(n, L, BB, node_temp, new_B);
         for(i=0; i<n; i++)
         {
-            dx[i] = b[i];
+            dx[i] = new_B[i];
             for(j=0; j<n; j++)
                 dx[i] -= A[i][j]*x[j];
             dx[i] /= A[i][i];
@@ -299,7 +301,6 @@ void run_gauss_seidel_method
         }
         residual = sqrt(res_sum);
         node_temp[i]=x[i];
-        Loadvector(n, L, BB, node_temp, new_B);
         //printf("Residual at iteration %4d : %.3e\n",k,residual);
         if(residual <= eps) break;
         //std::cout <<sum << std::endl;

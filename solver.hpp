@@ -8,7 +8,7 @@ void jacobi(int n, double **A, double *b, int maxit, int eps, double *x);
 void cp_vector(int, double* , const double* );
 bool epsilon_comp(int, const double* );
 double* sub_vector(int, const double* , const double* );
-void run_gauss_seidel_method( int n, double **A, double *b, double eps, int maxit, int *numit, double *x );
+void run_gauss_seidel_method( int n, double **A, double *b, double eps, int maxit, int *numit, double *x, double **L, double *BB);
 void cg( int n, double **A, double *b, double eps, int maxit,double *x);
 
 #endif

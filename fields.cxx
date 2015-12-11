@@ -53,14 +53,14 @@ void update_temperature(const Param &param, const Variables &var,
     
     /* calling the assembly function to create the K matrix and B vector*/
     assembly(n,nelem,L,BB,new_M);
-    Loadvector(n,L,BB,node_temp,new_B);
+    //Loadvector(n,L,BB,node_temp,new_B);
     
     double eps = 1.0e-5;
     int maxit = 10000; //2*n*n;
     int cnt = 0;
     
     //jacobi(n,A,b,maxit,eps,x);
-    run_gauss_seidel_method(n,new_M,new_B,eps,maxit,&cnt,node_temp);
+    run_gauss_seidel_method(n,new_M,new_B,eps,maxit,&cnt,node_temp,L,BB);
     printf("computed %d iterations\n",cnt);
     //cg(n,A,b,eps,maxit,x);
     
