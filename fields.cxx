@@ -26,40 +26,53 @@ void allocate_variables(const Param &param, Variables& var)
 void update_temperature(const Param &param, const Variables &var,
                         double_vec &temperature, double_vec &tdot)
 {
-    int n,i;
-        printf("give the dimension : ");
-        scanf("%d",&n);
-    double *b;
-    b = (double*) malloc(n*sizeof(double));
-    double **A;
-    A = (double**) malloc(n*sizeof(double*));
+    int n,nelem,i;
+    printf("no of nodes : ");
+    scanf("%d",&n);
+    printf("no of elements : ");
+    scanf("%d",&nelem);
+    /* Declaring all the global variables*/
+    double **new_M;
+    double **L;
+    new_M = (double**) malloc(n*sizeof(double*));
     for(i=0; i<n; i++)
-        A[i] = (double*) malloc(n*sizeof(double));
-    test_system(n,A,b);
-    double *x;
-    x = (double*) malloc(n*sizeof(double));
-    /* we start at an array of all zeroes */
-    for(i=0; i<n; i++) x[i] = 0.0;
-    double eps = 1.0e-5;
-    int maxit = 2*n*n;
-    int cnt = 0;
-    //jacobi(n,A,b,eps,maxit,x);
-    //run_gauss_seidel_method(n,A,b,eps,maxit,&cnt,x);
-    cg(n,A,b,eps,maxit,x);
-    printf("computed %d iterations\n",cnt);
-    double sum = 0.0;
-    for(i=0; i<n; i++) /* compute the error */
+        new_M[i] = (double*) malloc(n*sizeof(double));
+    L = (double**) malloc(n*sizeof(double*));
+    for(i=0; i<n; i++)
+        L[i] = (double*) malloc(n*sizeof(double));
+    double *BB;
+    BB = (double*) malloc(n*sizeof(double));
+    double *new_B;
+    new_B = (double*) malloc(n*sizeof(double));
+    double *node_temp;
+    node_temp = (double*) malloc(n*sizeof(double));
+    for (i=0;i<n;i++)
     {
-        double d = x[i] - 1.0;
-        sum += (d >= 0.0) ? d : -d;
+        node_temp[i] = 32; //initial conditions at all the nodes is 32F//
     }
-    printf("error : %.3e\n",sum);
-    //}
-    for (i = 0; i < n; i++);
-    free (A[i]);
-    free (A);
-    free(b);
-    free(x);
+    
+    /* calling the assembly function to create the K matrix and B vector*/
+    assembly(n,nelem);
+    Loadvector(n,L,BB,node_temp);
+    
+    double eps = 1.0e-5;
+    int maxit = 10000; //2*n*n;
+    int cnt = 0;
+    
+    //jacobi(n,A,b,maxit,eps,x);
+    run_gauss_seidel_method(n,new_M,new_B,eps,maxit,&cnt,node_temp);
+    printf("computed %d iterations\n",cnt);
+    //cg(n,A,b,eps,maxit,x);
+    
+    // Free arrays.
+#if 0
+    for (i = 0; i < n; i++) {
+        free (new_M[i]);
+    }
+#endif
+    free(new_M);
+    free(new_B);
+    free(node_temp);
+    
     return;
 }
-
